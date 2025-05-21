@@ -3,55 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7 Друзей: Тайны Переписки</title>
+    <title>Анализ переписки</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
             color: #333;
             margin: 0;
             padding: 20px;
+            line-height: 1.6;
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
             background-color: white;
             border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            box-shadow: 0 0 25px rgba(0,0,0,0.1);
             padding: 30px;
         }
         h1 {
             color: #2c3e50;
             text-align: center;
             margin-bottom: 30px;
+            font-weight: 600;
         }
         .game-screen {
             display: none;
         }
-        .question {
-            font-size: 20px;
-            margin-bottom: 20px;
+        .question-container {
             background-color: #f8f9fa;
-            padding: 15px;
+            padding: 25px;
             border-radius: 8px;
+            margin-bottom: 25px;
             border-left: 5px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .question-text {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        .question-context {
+            font-size: 16px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f0f2f5;
+            border-radius: 5px;
         }
         .options {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 25px;
         }
         .option {
             padding: 15px;
             background-color: #e9ecef;
             border-radius: 5px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            font-size: 16px;
         }
         .option:hover {
             background-color: #dee2e6;
-            transform: translateX(5px);
+            transform: translateX(3px);
         }
         .correct {
             background-color: #d4edda !important;
@@ -61,84 +78,117 @@
             background-color: #f8d7da !important;
             border-left: 5px solid #dc3545;
         }
+        .score-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
         .score {
             font-size: 18px;
             font-weight: bold;
-            margin-bottom: 20px;
-            text-align: center;
+            color: #2c3e50;
         }
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
+        .timer {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e74c3c;
+            background-color: #fdecea;
+            padding: 5px 15px;
+            border-radius: 20px;
         }
         button {
-            padding: 10px 20px;
+            padding: 12px 25px;
             background-color: #3498db;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: 500;
             transition: background-color 0.3s;
+            display: block;
+            margin: 0 auto;
         }
         button:hover {
             background-color: #2980b9;
         }
-        .result {
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .result-screen {
             text-align: center;
-            font-size: 24px;
-            margin-top: 20px;
             display: none;
         }
-        .timer {
-            text-align: center;
+        .result-title {
             font-size: 24px;
+            color: #2c3e50;
             margin-bottom: 20px;
-            color: #e74c3c;
         }
-        .player-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-            justify-content: center;
+        .final-score {
+            font-size: 28px;
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 30px;
         }
-        .player-tag {
-            padding: 5px 10px;
+        .start-screen {
+            text-align: center;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .progress {
+            height: 10px;
             background-color: #3498db;
-            color: white;
-            border-radius: 20px;
-            font-size: 14px;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>7 Друзей: Тайны Переписки</h1>
+        <h1>Анализ переписки</h1>
         
-        <div id="start-screen">
-            <h2>Добавьте участников</h2>
-            <div class="player-list" id="player-list"></div>
-            <input type="text" id="player-input" placeholder="Имя участника">
-            <button id="add-player">Добавить</button>
-            <button id="start-game" style="display: none;">Начать игру</button>
-        </div>
-        
-        <div id="game-screen" class="game-screen">
-            <div class="score">Очки: <span id="current-score">0</span></div>
-            <div class="timer" id="timer">30</div>
-            <div class="question" id="question"></div>
-            <div class="options" id="options"></div>
-            <div class="controls">
-                <button id="next-question" style="display: none;">Следующий вопрос</button>
+        <div id="start-screen" class="start-screen">
+            <h2>Проверь, насколько хорошо ты помнишь вашу переписку</h2>
+            <button id="load-game">Загрузить переписку</button>
+            <div id="loading" class="loading">
+                <p>Анализируем переписку...</p>
+                <div class="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
             </div>
         </div>
         
-        <div id="result-screen" class="game-screen">
-            <h2>Игра окончена!</h2>
-            <div class="result" id="final-score"></div>
+        <div id="game-screen" class="game-screen">
+            <div class="score-container">
+                <div class="score">Очки: <span id="current-score">0</span></div>
+                <div class="timer" id="timer">30</div>
+            </div>
+            
+            <div class="question-container">
+                <div class="question-text" id="question"></div>
+                <div class="question-context" id="context"></div>
+            </div>
+            
+            <div class="options" id="options"></div>
+            
+            <button id="next-question" disabled>Следующий вопрос</button>
+        </div>
+        
+        <div id="result-screen" class="result-screen">
+            <h2 class="result-title">Игра завершена!</h2>
+            <div class="final-score" id="final-score">0 баллов</div>
             <button id="restart-game">Играть снова</button>
         </div>
     </div>
@@ -146,13 +196,13 @@
     <script>
         // Данные игры
         const gameData = {
-            players: [],
-            currentPlayer: 0,
-            score: 0,
+            messages: [],
+            questions: [],
             currentQuestion: 0,
+            score: 0,
             timer: null,
             timeLeft: 30,
-            questions: []
+            answered: false
         };
 
         // Элементы интерфейса
@@ -160,11 +210,11 @@
             startScreen: document.getElementById('start-screen'),
             gameScreen: document.getElementById('game-screen'),
             resultScreen: document.getElementById('result-screen'),
-            playerList: document.getElementById('player-list'),
-            playerInput: document.getElementById('player-input'),
-            addPlayer: document.getElementById('add-player'),
-            startGame: document.getElementById('start-game'),
+            loadGame: document.getElementById('load-game'),
+            loading: document.getElementById('loading'),
+            progress: document.getElementById('progress'),
             question: document.getElementById('question'),
+            context: document.getElementById('context'),
             options: document.getElementById('options'),
             nextQuestion: document.getElementById('next-question'),
             currentScore: document.getElementById('current-score'),
@@ -174,131 +224,234 @@
         };
 
         // Обработчики событий
-        elements.addPlayer.addEventListener('click', addPlayer);
-        elements.startGame.addEventListener('click', startGame);
+        elements.loadGame.addEventListener('click', loadGame);
         elements.nextQuestion.addEventListener('click', nextQuestion);
         elements.restartGame.addEventListener('click', restartGame);
 
-        // Загрузка переписки
-        async function loadChat() {
+        // Загрузка и анализ переписки
+        async function loadGame() {
+            elements.loadGame.disabled = true;
+            elements.loading.style.display = 'block';
+            
             try {
+                // Имитация прогресса загрузки
+                for (let i = 0; i <= 100; i += 10) {
+                    elements.progress.style.width = `${i}%`;
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+                
                 const response = await fetch('chat.txt');
                 const text = await response.text();
-                return parseChat(text);
-            } catch (error) {
-                console.error('Ошибка загрузки переписки:', error);
-                return [];
-            }
-        }
-
-        // Парсинг переписки из txt
-        function parseChat(text) {
-            const lines = text.split('\n').filter(line => line.trim() !== '');
-            const messages = [];
-            
-            for (const line of lines) {
-                const parts = line.split('\t');
-                if (parts.length >= 3) {
-                    messages.push({
-                        date: new Date(parts[0]),
-                        author: parts[1],
-                        text: parts[2]
-                    });
+                gameData.messages = parseChat(text);
+                
+                if (gameData.messages.length === 0) {
+                    alert('Не удалось загрузить переписку. Проверьте файл chat.txt');
+                    return;
                 }
+                
+                gameData.questions = generateQuestions(gameData.messages);
+                startGame();
+                
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                alert('Произошла ошибка при загрузке переписки');
+            } finally {
+                elements.loading.style.display = 'none';
+                elements.loadGame.disabled = false;
             }
-            
-            return messages;
         }
 
-        // Генерация вопросов
-        async function generateQuestions() {
-            const messages = await loadChat();
+        // Парсинг переписки
+        function parseChat(text) {
+            return text.split('\n')
+                .filter(line => line.trim() !== '')
+                .map(line => {
+                    const parts = line.split('\t');
+                    if (parts.length >= 3) {
+                        return {
+                            date: new Date(parts[0]),
+                            author: parts[1],
+                            text: parts[2],
+                            words: parts[2].split(/\s+/).filter(w => w.length > 0)
+                        };
+                    }
+                    return null;
+                })
+                .filter(msg => msg !== null);
+        }
+
+        // Генерация вопросов с глубоким анализом
+        function generateQuestions(messages) {
             const questions = [];
-            
-            // Вопросы типа "Кто это написал?"
             const authors = [...new Set(messages.map(m => m.author))];
-            for (let i = 0; i < 5 && i < messages.length; i++) {
-                const message = messages[i];
-                const options = getRandomOptions(authors, message.author, 3);
+            const dates = [...new Set(messages.map(m => m.date.toISOString().split('T')[0]))];
+            const topics = detectTopics(messages);
+            
+            // 1. Вопросы об авторе сообщения
+            for (let i = 0; i < 5; i++) {
+                const randomMsg = getRandomMessage(messages);
+                if (!randomMsg) continue;
+                
+                const otherAuthors = authors.filter(a => a !== randomMsg.author);
+                const options = shuffleArray([
+                    randomMsg.author,
+                    ...getRandomElements(otherAuthors, 3)
+                ]);
+                
                 questions.push({
                     type: 'author',
-                    text: `Кто написал: "${message.text}"?`,
-                    correctAnswer: message.author,
-                    options: shuffleArray([...options, message.author]),
-                    meta: message
+                    question: `Кто написал это сообщение?\n"${randomMsg.text}"`,
+                    context: `Дата: ${formatDate(randomMsg.date)}`,
+                    correctAnswer: randomMsg.author,
+                    options: options,
+                    meta: randomMsg
                 });
             }
             
-            // Вопросы типа "О чем это?"
-            const interestingMessages = messages.filter(m => m.text.length > 20);
-            for (let i = 0; i < 5 && i < interestingMessages.length; i++) {
-                const message = interestingMessages[i];
+            // 2. Вопросы о дате сообщения
+            for (let i = 0; i < 5; i++) {
+                const randomMsg = getRandomMessage(messages);
+                if (!randomMsg) continue;
+                
+                const dateStr = randomMsg.date.toISOString().split('T')[0];
+                const otherDates = dates.filter(d => d !== dateStr);
+                const options = shuffleArray([
+                    formatDate(randomMsg.date),
+                    ...getRandomElements(otherDates, 3).map(d => formatDate(new Date(d)))
+                ]);
+                
                 questions.push({
-                    type: 'context',
-                    text: `О чем шла речь в сообщении: "${message.text.substring(0, 50)}..."?`,
-                    correctAnswer: message.text,
-                    options: [
-                        'О работе',
-                        'О планах на выходные',
-                        'О каком-то событии',
-                        'О еде'
-                    ],
-                    meta: message
+                    type: 'date',
+                    question: `Когда было отправлено это сообщение?\n"${randomMsg.text}"`,
+                    context: `Автор: ${randomMsg.author}`,
+                    correctAnswer: formatDate(randomMsg.date),
+                    options: options,
+                    meta: randomMsg
+                });
+            }
+            
+            // 3. Вопросы о контексте
+            for (let i = 0; i < 5; i++) {
+                const randomMsg = getRandomMessage(messages.filter(m => m.words.length > 5));
+                if (!randomMsg) continue;
+                
+                const topic = detectMessageTopic(randomMsg, topics);
+                const options = shuffleArray([
+                    topic || 'Разное',
+                    ...getRandomTopics(topics, 3, topic)
+                ]);
+                
+                questions.push({
+                    type: 'topic',
+                    question: `О чем это сообщение?\n"${randomMsg.text}"`,
+                    context: `Автор: ${randomMsg.author}, Дата: ${formatDate(randomMsg.date)}`,
+                    correctAnswer: topic || 'Разное',
+                    options: options,
+                    meta: randomMsg
+                });
+            }
+            
+            // 4. Вопросы о продолжении
+            for (let i = 0; i < 5; i++) {
+                const randomMsg = getRandomMessage(messages.filter(m => m.text.length > 20));
+                if (!randomMsg) continue;
+                
+                const nextMessages = messages.slice(
+                    messages.indexOf(randomMsg) + 1,
+                    messages.indexOf(randomMsg) + 4
+                ).filter(m => m.author !== randomMsg.author);
+                
+                if (nextMessages.length === 0) continue;
+                
+                const realNext = nextMessages[0];
+                const otherOptions = messages
+                    .filter(m => m.text !== realNext.text && m.author !== randomMsg.author)
+                    .slice(0, 3)
+                    .map(m => m.text);
+                
+                const options = shuffleArray([
+                    realNext.text,
+                    ...otherOptions
+                ]);
+                
+                questions.push({
+                    type: 'continuation',
+                    question: `Каким было следующее сообщение после этого?\n"${randomMsg.text}"`,
+                    context: `Автор: ${randomMsg.author}, Дата: ${formatDate(randomMsg.date)}`,
+                    correctAnswer: realNext.text,
+                    options: options,
+                    meta: randomMsg
                 });
             }
             
             return shuffleArray(questions);
         }
 
-        // Вспомогательные функции
-        function getRandomOptions(array, exclude, count) {
-            const options = [];
-            const filtered = array.filter(item => item !== exclude);
+        // Анализ тем переписки
+        function detectTopics(messages) {
+            const topicKeywords = {
+                'Работа': ['работа', 'проект', 'задача', 'начальник', 'коллега'],
+                'Встречи': ['встреча', 'встретимся', 'кафе', 'кофе', 'ресторан'],
+                'Праздники': ['день рождения', 'праздник', 'поздравляю', 'подарок'],
+                'Путешествия': ['отпуск', 'билеты', 'отель', 'аэропорт', 'поездка'],
+                'Финансы': ['деньги', 'зарплата', 'оплата', 'счет', 'перевод']
+            };
             
-            while (options.length < count && filtered.length > 0) {
-                const randomIndex = Math.floor(Math.random() * filtered.length);
-                options.push(filtered[randomIndex]);
-                filtered.splice(randomIndex, 1);
-            }
+            const topics = {};
             
-            return options;
-        }
-
-        function shuffleArray(array) {
-            return array.sort(() => Math.random() - 0.5);
-        }
-
-        // Игровая логика
-        function addPlayer() {
-            const name = elements.playerInput.value.trim();
-            if (name && gameData.players.length < 7) {
-                gameData.players.push(name);
-                elements.playerInput.value = '';
-                updatePlayerList();
+            messages.forEach(msg => {
+                const msgTopics = [];
+                const lowerText = msg.text.toLowerCase();
                 
-                if (gameData.players.length >= 2) {
-                    elements.startGame.style.display = 'inline-block';
+                for (const [topic, keywords] of Object.entries(topicKeywords)) {
+                    if (keywords.some(word => lowerText.includes(word))) {
+                        msgTopics.push(topic);
+                    }
                 }
-            }
+                
+                if (msgTopics.length > 0) {
+                    topics[msg.text] = msgTopics[0];
+                }
+            });
+            
+            return topics;
         }
 
-        function updatePlayerList() {
-            elements.playerList.innerHTML = '';
-            gameData.players.forEach(player => {
-                const tag = document.createElement('div');
-                tag.className = 'player-tag';
-                tag.textContent = player;
-                elements.playerList.appendChild(tag);
+        // Вспомогательные функции
+        function getRandomMessage(messages) {
+            if (messages.length === 0) return null;
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        function getRandomElements(array, count) {
+            const shuffled = [...array].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function getRandomTopics(topics, count, exclude) {
+            const uniqueTopics = [...new Set(Object.values(topics))];
+            const filtered = uniqueTopics.filter(t => t !== exclude);
+            return getRandomElements(filtered, count);
+        }
+
+        function detectMessageTopic(message, topics) {
+            return topics[message.text] || null;
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('ru-RU', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
             });
         }
 
-        async function startGame() {
-            gameData.questions = await generateQuestions();
-            if (gameData.questions.length === 0) {
-                alert('Не удалось загрузить вопросы. Проверьте файл chat.txt');
-                return;
-            }
-            
+        function shuffleArray(array) {
+            return [...array].sort(() => Math.random() - 0.5);
+        }
+
+        // Игровая логика
+        function startGame() {
             gameData.currentQuestion = 0;
             gameData.score = 0;
             elements.currentScore.textContent = '0';
@@ -316,22 +469,28 @@
                 return;
             }
             
+            gameData.answered = false;
+            elements.nextQuestion.disabled = true;
+            
             const question = gameData.questions[gameData.currentQuestion];
-            elements.question.textContent = question.text;
+            elements.question.textContent = question.question;
+            elements.context.textContent = question.context;
             elements.options.innerHTML = '';
             
             question.options.forEach((option, index) => {
                 const optionElement = document.createElement('div');
                 optionElement.className = 'option';
                 optionElement.textContent = option;
-                optionElement.addEventListener('click', () => checkAnswer(option, question.correctAnswer));
+                optionElement.addEventListener('click', () => selectAnswer(option, question.correctAnswer));
                 elements.options.appendChild(optionElement);
             });
             
             resetTimer();
         }
 
-        function checkAnswer(selected, correct) {
+        function selectAnswer(selected, correct) {
+            if (gameData.answered) return;
+            gameData.answered = true;
             clearInterval(gameData.timer);
             
             const options = document.querySelectorAll('.option');
@@ -349,12 +508,11 @@
                 elements.currentScore.textContent = gameData.score;
             }
             
-            elements.nextQuestion.style.display = 'inline-block';
+            elements.nextQuestion.disabled = false;
         }
 
         function nextQuestion() {
             gameData.currentQuestion++;
-            elements.nextQuestion.style.display = 'none';
             showQuestion();
         }
 
@@ -366,11 +524,14 @@
                 
                 if (gameData.timeLeft <= 0) {
                     clearInterval(gameData.timer);
-                    const options = document.querySelectorAll('.option');
-                    options.forEach(option => {
-                        option.style.pointerEvents = 'none';
-                    });
-                    elements.nextQuestion.style.display = 'inline-block';
+                    if (!gameData.answered) {
+                        const options = document.querySelectorAll('.option');
+                        options.forEach(option => {
+                            option.style.pointerEvents = 'none';
+                        });
+                        elements.nextQuestion.disabled = false;
+                        gameData.answered = true;
+                    }
                 }
             }, 1000);
         }
@@ -384,7 +545,7 @@
         function endGame() {
             elements.gameScreen.style.display = 'none';
             elements.resultScreen.style.display = 'block';
-            elements.finalScore.textContent = `Ваш результат: ${gameData.score} баллов`;
+            elements.finalScore.textContent = `${gameData.score} баллов из ${gameData.questions.length * 10}`;
         }
 
         function restartGame() {
