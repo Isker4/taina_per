@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Друзей: Тайны Переписки</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .game-screen {
+            display: none;
+        }
+        .question {
+            font-size: 20px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #3498db;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .option {
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option:hover {
+            background-color: #dee2e6;
+            transform: translateX(5px);
+        }
+        .correct {
+            background-color: #d4edda !important;
+            border-left: 5px solid #28a745;
+        }
+        .wrong {
+            background-color: #f8d7da !important;
+            border-left: 5px solid #dc3545;
+        }
+        .score {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+            display: none;
+        }
+        .timer {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #e74c3c;
+        }
+        .player-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .player-tag {
+            padding: 5px 10px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>7 Друзей: Тайны Переписки</h1>
+        
+        <div id="start-screen">
+            <h2>Добавьте участников</h2>
+            <div class="player-list" id="player-list"></div>
+            <input type="text" id="player-input" placeholder="Имя участника">
+            <button id="add-player">Добавить</button>
+            <button id="start-game" style="display: none;">Начать игру</button>
+        </div>
+        
+        <div id="game-screen" class="game-screen">
+            <div class="score">Очки: <span id="current-score">0</span></div>
+            <div class="timer" id="timer">30</div>
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            <div class="controls">
+                <button id="next-question" style="display: none;">Следующий вопрос</button>
+            </div>
+        </div>
+        
+        <div id="result-screen" class="game-screen">
+            <h2>Игра окончена!</h2>
+            <div class="result" id="final-score"></div>
+            <button id="restart-game">Играть снова</button>
+        </div>
+    </div>
+
+    <script>
+        // Данные игры
+        const gameData = {
+            players: [],
+            currentPlayer: 0,
+            score: 0,
+            currentQuestion: 0,
+            timer: null,
+            timeLeft: 30,
+            questions: []
+        };
+
+        // Элементы интерфейса
+        const elements = {
+            startScreen: document.getElementById('start-screen'),
+            gameScreen: document.getElementById('game-screen'),
+            resultScreen: document.getElementById('result-screen'),
+            playerList: document.getElementById('player-list'),
+            playerInput: document.getElementById('player-input'),
+            addPlayer: document.getElementById('add-player'),
+            startGame: document.getElementById('start-game'),
+            question: document.getElementById('question'),
+            options: document.getElementById('options'),
+            nextQuestion: document.getElementById('next-question'),
+            currentScore: document.getElementById('current-score'),
+            finalScore: document.getElementById('final-score'),
+            timer: document.getElementById('timer'),
+            restartGame: document.getElementById('restart-game')
+        };
+
+        // Обработчики событий
+        elements.addPlayer.addEventListener('click', addPlayer);
+        elements.startGame.addEventListener('click', startGame);
+        elements.nextQuestion.addEventListener('click', nextQuestion);
+        elements.restartGame.addEventListener('click', restartGame);
+
+        // Загрузка переписки
+        async function loadChat() {
+            try {
+                const response = await fetch('chat.txt');
+                const text = await response.text();
+                return parseChat(text);
+            } catch (error) {
+                console.error('Ошибка загрузки переписки:', error);
+                return [];
+            }
+        }
+
+        // Парсинг переписки из txt
+        function parseChat(text) {
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            const messages = [];
+            
+            for (const line of lines) {
+                const parts = line.split('\t');
+                if (parts.length >= 3) {
+                    messages.push({
+                        date: new Date(parts[0]),
+                        author: parts[1],
+                        text: parts[2]
+                    });
+                }
+            }
+            
+            return messages;
+        }
+
+        // Генерация вопросов
+        async function generateQuestions() {
+            const messages = await loadChat();
+            const questions = [];
+            
+            // Вопросы типа "Кто это написал?"
+            const authors = [...new Set(messages.map(m => m.author))];
+            for (let i = 0; i < 5 && i < messages.length; i++) {
+                const message = messages[i];
+                const options = getRandomOptions(authors, message.author, 3);
+                questions.push({
+                    type: 'author',
+                    text: `Кто написал: "${message.text}"?`,
+                    correctAnswer: message.author,
+                    options: shuffleArray([...options, message.author]),
+                    meta: message
+                });
+            }
+            
+            // Вопросы типа "О чем это?"
+            const interestingMessages = messages.filter(m => m.text.length > 20);
+            for (let i = 0; i < 5 && i < interestingMessages.length; i++) {
+                const message = interestingMessages[i];
+                questions.push({
+                    type: 'context',
+                    text: `О чем шла речь в сообщении: "${message.text.substring(0, 50)}..."?`,
+                    correctAnswer: message.text,
+                    options: [
+                        'О работе',
+                        'О планах на выходные',
+                        'О каком-то событии',
+                        'О еде'
+                    ],
+                    meta: message
+                });
+            }
+            
+            return shuffleArray(questions);
+        }
+
+        // Вспомогательные функции
+        function getRandomOptions(array, exclude, count) {
+            const options = [];
+            const filtered = array.filter(item => item !== exclude);
+            
+            while (options.length < count && filtered.length > 0) {
+                const randomIndex = Math.floor(Math.random() * filtered.length);
+                options.push(filtered[randomIndex]);
+                filtered.splice(randomIndex, 1);
+            }
+            
+            return options;
+        }
+
+        function shuffleArray(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        // Игровая логика
+        function addPlayer() {
+            const name = elements.playerInput.value.trim();
+            if (name && gameData.players.length < 7) {
+                gameData.players.push(name);
+                elements.playerInput.value = '';
+                updatePlayerList();
+                
+                if (gameData.players.length >= 2) {
+                    elements.startGame.style.display = 'inline-block';
+                }
+            }
+        }
+
+        function updatePlayerList() {
+            elements.playerList.innerHTML = '';
+            gameData.players.forEach(player => {
+                const tag = document.createElement('div');
+                tag.className = 'player-tag';
+                tag.textContent = player;
+                elements.playerList.appendChild(tag);
+            });
+        }
+
+        async function startGame() {
+            gameData.questions = await generateQuestions();
+            if (gameData.questions.length === 0) {
+                alert('Не удалось загрузить вопросы. Проверьте файл chat.txt');
+                return;
+            }
+            
+            gameData.currentQuestion = 0;
+            gameData.score = 0;
+            elements.currentScore.textContent = '0';
+            
+            elements.startScreen.style.display = 'none';
+            elements.gameScreen.style.display = 'block';
+            
+            showQuestion();
+            startTimer();
+        }
+
+        function showQuestion() {
+            if (gameData.currentQuestion >= gameData.questions.length) {
+                endGame();
+                return;
+            }
+            
+            const question = gameData.questions[gameData.currentQuestion];
+            elements.question.textContent = question.text;
+            elements.options.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => checkAnswer(option, question.correctAnswer));
+                elements.options.appendChild(optionElement);
+            });
+            
+            resetTimer();
+        }
+
+        function checkAnswer(selected, correct) {
+            clearInterval(gameData.timer);
+            
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+                if (option.textContent === correct) {
+                    option.classList.add('correct');
+                } else if (option.textContent === selected && selected !== correct) {
+                    option.classList.add('wrong');
+                }
+            });
+            
+            if (selected === correct) {
+                gameData.score += 10;
+                elements.currentScore.textContent = gameData.score;
+            }
+            
+            elements.nextQuestion.style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            gameData.currentQuestion++;
+            elements.nextQuestion.style.display = 'none';
+            showQuestion();
+        }
+
+        function startTimer() {
+            resetTimer();
+            gameData.timer = setInterval(() => {
+                gameData.timeLeft--;
+                elements.timer.textContent = gameData.timeLeft;
+                
+                if (gameData.timeLeft <= 0) {
+                    clearInterval(gameData.timer);
+                    const options = document.querySelectorAll('.option');
+                    options.forEach(option => {
+                        option.style.pointerEvents = 'none';
+                    });
+                    elements.nextQuestion.style.display = 'inline-block';
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            clearInterval(gameData.timer);
+            gameData.timeLeft = 30;
+            elements.timer.textContent = gameData.timeLeft;
+        }
+
+        function endGame() {
+            elements.gameScreen.style.display = 'none';
+            elements.resultScreen.style.display = 'block';
+            elements.finalScore.textContent = `Ваш результат: ${gameData.score} баллов`;
+        }
+
+        function restartGame() {
+            elements.resultScreen.style.display = 'none';
+            elements.startScreen.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
